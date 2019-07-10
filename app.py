@@ -27,25 +27,6 @@ def load_frozen_graph(frozen_graph_filename):
         graph_def.ParseFromString(f.read())
 
 
-def rescale_boxes(current_shape, anno, target_height, target_width, test=False):
-    for r in anno.rects:
-        if r.x1 >= r.x2:
-            if test:
-                r.x1, r.x2 = r.x2, r.x1
-            else:
-                assert r.x1 < r.x2
-        r.x1 *= x_scale
-        r.x2 *= x_scale
-        if r.y1 >= r.y2:
-            if test:
-                r.y1, r.y2 = r.y2, r.y1
-            else:
-                assert r.y1 < r.y2
-        r.y1 *= y_scale
-        r.y2 *= y_scale
-    return anno
-
-
 def object_detection(args):
     with tf.io.gfile.GFile(args.frozen, 'rb') as f:
         graph_def = tf.compat.v1.GraphDef()
@@ -97,14 +78,10 @@ def object_detection(args):
             cell_pix_size = 32
             x_scale = 480 / rows
             y_scale = 640 / cols
-
-            print(float(x_scale) * float(rows))
-            print(y_scale * cols)
-            print(img.shape)
             inp = inp[:, :, [0, 1, 2]]
             i = 0
             inp = cv.cvtColor(inp, cv.COLOR_RGB2BGR)
-            copy = inp
+            copy = inp.copy()
             for n in range(1):
                 for y in range(15):
                     for x in range(20):
@@ -123,8 +100,9 @@ def object_detection(args):
                             cv.rectangle(inp, (int((abs_cx - w / 2)), int((abs_cy - h / 2))),
                                          (int((abs_cx + w / 2)), int((abs_cy + h / 2))),
                                          (0, y, x), thickness=2)
-            tmp = cv.resize(inp, (cols, rows))
-            save_images(tmp, args.output, getImageName(args.image))
+            if args.overview:
+                tmp = cv.resize(inp, (cols, rows))
+                save_images(tmp, args.output, getImageName(args.image))
         else:
             print("API\n")
             out = sess.run([sess.graph.get_tensor_by_name('num_detections:0'),
@@ -134,7 +112,6 @@ def object_detection(args):
                            feed_dict={'image_tensor:0': inp.reshape(1, inp.shape[0], inp.shape[1], 3)})
             num_detections = int(out[0][0])
             for i in range(num_detections):
-                classId = int(out[3][0][i])
                 score = float(out[1][0][i])
                 bbox = [float(v) for v in out[2][0][i]]
                 if score > 0.1:
@@ -142,10 +119,10 @@ def object_detection(args):
                     y = bbox[0] * rows
                     right = bbox[3] * cols
                     bottom = bbox[2] * rows
-
                     save_images(img[int(y):int(bottom), int(x):int(right)], args.output, getImageName(args.image), i)
                     cv.rectangle(img, (int(x), int(y)), (int(right), int(bottom)), (125, 255, 51), thickness=2)
-            save_images(img, args.output, getImageName(args.image))
+            if args.overview :
+                save_images(img, args.output, getImageName(args.image))
 
 
 if __name__ == '__main__':
@@ -154,5 +131,6 @@ if __name__ == '__main__':
     parser.add_argument("--frozen", required=True)
     parser.add_argument("--output", default="output")
     parser.add_argument("--tb", type=bool, default=False)
+    parser.add_argument("--overview",type=bool,default=True)
     args = parser.parse_args()
     object_detection(args)
