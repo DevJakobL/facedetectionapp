@@ -126,11 +126,11 @@ def object_detection(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("--image", required=True)
-    parser.add_argument("--frozen", required=True)
-    parser.add_argument("--output", default="output")
-    parser.add_argument("--tb", type=bool, default=False)
-    parser.add_argument("--overview",type=bool,default=True)
+    parser = argparse.ArgumentParser(description='A tool to detect faces in images and cut out the detected faces. ')
+    parser.add_argument("--image", required=True,  help='Set path to the image.')
+    parser.add_argument("--frozen", required=True, help='Set path to the frozen graph.bp.')
+    parser.add_argument("--output", default="output", help='Set path to the detected faces. By default the path is output.')
+    parser.add_argument("--tb", type=bool, default=False,help='Must true if you use graphs from Tensorbox. By default it is false.')
+    parser.add_argument("--overview",type=bool,default=True,help='False if you save only the faces. By default it is true. ')
     args = parser.parse_args()
     object_detection(args)
