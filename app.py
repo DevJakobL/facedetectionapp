@@ -131,6 +131,6 @@ if __name__ == '__main__':
     parser.add_argument("--frozen", required=True, help='Set path to the frozen graph.bp.')
     parser.add_argument("--output", default="output", help='Set path to the detected faces. By default the path is output.')
     parser.add_argument("--tb", type=bool, default=False,help='Must true if you use graphs from Tensorbox. By default it is false.')
-    parser.add_argument("--overview",type=bool,default=True,help='False if you save only the faces. By default it is true. ')
+    parser.add_argument("--overview",type=bool,default=False,help='False if you save only the faces. By default it is False. ')
     args = parser.parse_args()
     object_detection(args)
